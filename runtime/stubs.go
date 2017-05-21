@@ -57,10 +57,10 @@ func badsystemstack() {
 	throw("systemstack called from unexpected goroutine")
 }
 
+// 释放内存空间
 // memclr clears n bytes starting at ptr.
 // in memclr_*.s
 //go:noescape
-// 释放内存空间
 func memclr(ptr unsafe.Pointer, n uintptr)
 
 //go:linkname reflect_memclr reflect.memclr

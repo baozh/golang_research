@@ -726,7 +726,7 @@ next:
 		if bucket == it.startBucket && it.wrapped {
 			// end of iteration
 			it.key = nil
-			it.value = nil //遍历完了，为什么不 置h.flags标志呢？？？
+			it.value = nil //遍历完了，为什么不 置h.flags标志呢？（bzh: 不置标志，也不影响读、写、迁移数据，flag olditerator只是用来在迁移完成后 判断是否要立即释放到GC）
 			return
 		}
 
