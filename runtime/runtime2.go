@@ -5,9 +5,9 @@
 package runtime
 
 import (
-	"runtime/internal/atomic"
-	"runtime/internal/sys"
-	"unsafe"
+	"github.com/baozh/golang_research/runtime/internal/atomic"
+	"github.com/baozh/golang_research/runtime/internal/sys"
+	"github.com/baozh/golang_research/unsafe"
 )
 
 // defined constants

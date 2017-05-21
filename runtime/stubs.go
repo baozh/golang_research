@@ -4,7 +4,7 @@
 
 package runtime
 
-import "unsafe"
+import "github.com/baozh/golang_research/unsafe"
 
 // Should be a built-in for unsafe.Pointer?
 //go:nosplit
@@ -60,6 +60,7 @@ func badsystemstack() {
 // memclr clears n bytes starting at ptr.
 // in memclr_*.s
 //go:noescape
+// 释放内存空间
 func memclr(ptr unsafe.Pointer, n uintptr)
 
 //go:linkname reflect_memclr reflect.memclr

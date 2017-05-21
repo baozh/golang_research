@@ -14,8 +14,8 @@
 package runtime
 
 import (
-	"runtime/internal/sys"
-	"unsafe"
+	"github.com/baozh/golang_research/runtime/internal/sys"
+	"github.com/baozh/golang_research/unsafe"
 )
 
 // markwb is the mark-phase write barrier, the only barrier we have.

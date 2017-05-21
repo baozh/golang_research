@@ -10,7 +10,7 @@
 
 package runtime
 
-import "unsafe"
+import "github.com/baozh/golang_research/unsafe"
 
 const (
 	// Constants for multiplication: four random odd 32-bit numbers.

@@ -5,7 +5,7 @@
 package runtime
 
 import (
-	"runtime/internal/atomic"
+	"github.com/baozh/golang_research/runtime/internal/atomic"
 	"unsafe"
 )
 

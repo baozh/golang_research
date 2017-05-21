@@ -5,7 +5,7 @@
 package runtime
 
 import (
-	"runtime/internal/sys"
+	"github.com/baozh/golang_research/runtime/internal/sys"
 	"unsafe"
 )
 

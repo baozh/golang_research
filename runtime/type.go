@@ -6,7 +6,7 @@
 
 package runtime
 
-import "unsafe"
+import "github.com/baozh/golang_research/unsafe"
 
 // tflag is documented in reflect/type.go.
 //
@@ -30,7 +30,7 @@ type _type struct {
 	ptrdata    uintptr // size of memory prefix holding all pointers
 	hash       uint32
 	tflag      tflag
-	align      uint8
+	align      uint8 //内存对齐的单位（8字节之内）
 	fieldalign uint8
 	kind       uint8
 	alg        *typeAlg
@@ -324,9 +324,9 @@ type maptype struct {
 	elem          *_type
 	bucket        *_type // internal type representing a hash bucket
 	hmap          *_type // internal type representing a hmap
-	keysize       uint8  // size of key slot
+	keysize       uint8  // size of key slot     如果key存的是内容，则keysize为key.size，如果key存的是地址，则keysize为8
 	indirectkey   bool   // store ptr to key instead of key itself
-	valuesize     uint8  // size of value slot
+	valuesize     uint8  // size of value slot   如果value存的是内容，则valuesize为elem.size，如果value存的是地址，则valuesize为8
 	indirectvalue bool   // store ptr to value instead of value itself
 	bucketsize    uint16 // size of bucket
 	reflexivekey  bool   // true if k==k for all keys

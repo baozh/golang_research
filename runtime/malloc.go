@@ -80,8 +80,8 @@
 package runtime
 
 import (
-	"runtime/internal/sys"
-	"unsafe"
+	"github.com/baozh/golang_research/runtime/internal/sys"
+	"github.com/baozh/golang_research/unsafe"
 )
 
 const (
@@ -781,6 +781,7 @@ func largeAlloc(size uintptr, needzero bool) *mspan {
 }
 
 // implementation of new builtin
+//分配 内存空间（大小为typ.size）
 func newobject(typ *_type) unsafe.Pointer {
 	return mallocgc(typ.size, typ, true)
 }
