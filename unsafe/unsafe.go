@@ -31,7 +31,7 @@ type ArbitraryType int
 // Running "go vet" can help find uses of Pointer that do not conform to these patterns,
 // but silence from "go vet" is not a guarantee that the code is valid.
 //
-// (1) Conversion of a *T1 to Pointer to *T2.
+// (1) Conversion of a *T1 to Pointer to *T2. 将 一种类型的地址 *A 转成 另一种类型的地址 *B
 //
 // Provided that T2 is no larger than T1 and that the two share an equivalent
 // memory layout, this conversion allows reinterpreting data of one type as
@@ -55,7 +55,7 @@ type ArbitraryType int
 // Even if a uintptr holds the address of some object,
 // the garbage collector will not update that uintptr's value
 // if the object moves, nor will that uintptr keep the object
-// from being reclaimed.
+// from being reclaimed.  uintptr指向的内存地址 可能 是无效的，因为GC有可能会回收它指向的内存。而unsafe.Pointer指向的对象 是不会回收的。
 //
 // The remaining patterns enumerate the only valid conversions
 // from uintptr to Pointer.
@@ -79,7 +79,7 @@ type ArbitraryType int
 // It is valid both to add and to subtract offsets from a pointer in this way,
 // but the result must continue to point into the original allocated object.
 // Unlike in C, it is not valid to advance a pointer just beyond the end of
-// its original allocation:
+// its original allocation: 注：uinptr的指针运算后的地址 必须在 对象内存空间内，否则是无效的。
 //
 //	// INVALID: end points outside allocated space.
 //	var s thing
@@ -94,6 +94,7 @@ type ArbitraryType int
 //
 //	// INVALID: uintptr cannot be stored in variable
 //	// before conversion back to Pointer.
+//      // 注意：如果 *T要通过uinptr来进行指针操作，再转成unsafe.Pointer，则不能用一个临时变量来保存uintptr的值。
 //	u := uintptr(p)
 //	p = unsafe.Pointer(u + offset)
 //
@@ -104,7 +105,7 @@ type ArbitraryType int
 // reinterpret some of them as pointers.
 // That is, the system call implementation is implicitly converting certain arguments
 // back from uintptr to pointer.
-//
+// 在显式调用syscall时，有时需要传uintptr参数，这时 不能用一个临时变量来保存uintptr的值，而是 直接在调用表达式中 转成uinptr。
 // If a pointer argument must be converted to uintptr for use as an argument,
 // that conversion must appear in the call expression itself:
 //
@@ -126,6 +127,7 @@ type ArbitraryType int
 //
 // (5) Conversion of the result of reflect.Value.Pointer or reflect.Value.UnsafeAddr
 // from uintptr to Pointer.
+// 一些库函数（如reflect.Value.Pointer()）是直接返回uinptr，这里应该 直接转成unsafe.Pointer或*T，不能用一个临时变量来保存uintptr的值。
 //
 // Package reflect's Value methods named Pointer and UnsafeAddr return type uintptr
 // instead of unsafe.Pointer to keep callers from changing the result to an arbitrary
@@ -176,11 +178,13 @@ type Pointer *ArbitraryType
 // The size does not include any memory possibly referenced by x.
 // For instance, if x is a slice,  Sizeof returns the size of the slice
 // descriptor, not the size of the memory referenced by the slice.
+// 返回 以字节为单位的大小
 func Sizeof(x ArbitraryType) uintptr
 
 // Offsetof returns the offset within the struct of the field represented by x,
 // which must be of the form structValue.field. In other words, it returns the
 // number of bytes between the start of the struct and the start of the field.
+// 返回 以字节为单位的偏移量
 func Offsetof(x ArbitraryType) uintptr
 
 // Alignof takes an expression x of any type and returns the required alignment
@@ -191,4 +195,5 @@ func Offsetof(x ArbitraryType) uintptr
 // within that struct, then Alignof(s.f) will return the required alignment
 // of a field of that type within a struct. This case is the same as the
 // value returned by reflect.TypeOf(s.f).FieldAlign().
+// Alignof返回的是 以字为单位的大小，而不是以字节为单位的大小。
 func Alignof(x ArbitraryType) uintptr

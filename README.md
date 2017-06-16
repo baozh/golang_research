@@ -6,3 +6,5 @@ Some exploration and notes of golang source code.
 
 - runtime/hashmap.go
 - sync/syncmap/syncmap.go
+- sync/pool.go
+- unsafe/unsafe.go

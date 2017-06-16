@@ -5,10 +5,10 @@
 package sync
 
 import (
-	"internal/race"
-	"runtime"
-	"sync/atomic"
-	"unsafe"
+	"github.com/baozh/golang_research/internal/race"
+	"github.com/baozh/golang_research/runtime"
+	"github.com/baozh/golang_research/sync/atomic"
+	"github.com/baozh/golang_research/unsafe"
 )
 
 // A Pool is a set of temporary objects that may be individually saved and
@@ -44,8 +44,9 @@ import (
 type Pool struct {
 	noCopy noCopy
 
+	//存储数组首地址 &poolLocal[0]。在重新分配poolLocal时，要加一个全局锁allPoolsMu.
 	local     unsafe.Pointer // local fixed-size per-P pool, actual type is [P]poolLocal
-	localSize uintptr        // size of the local array
+	localSize uintptr        // size of the local array  数组大小
 
 	// New optionally specifies a function to generate
 	// a value when Get would otherwise return nil.
@@ -54,6 +55,7 @@ type Pool struct {
 }
 
 // Local per-P Pool appendix.
+// 获取时，先从private中获取，如果它为空，则从本P的shared队列中获取一个，如果还为空，则从其它P的shared队列中窃取一个，否则调用p.New()生成一个。
 type poolLocal struct {
 	private interface{}   // Can be used only by the respective P.
 	shared  []interface{} // Can be used by any P.
@@ -108,7 +110,7 @@ func (p *Pool) Get() interface{} {
 	if x != nil {
 		return x
 	}
-	l.Lock()
+	l.Lock()    //在GC的时候 调用Get，这个时候在Get()时，还是有引用l的，所以不会马上析构l中的对象。
 	last := len(l.shared) - 1
 	if last >= 0 {
 		x = l.shared[last]
@@ -150,7 +152,7 @@ func (p *Pool) getSlow() (x interface{}) {
 // pin pins the current goroutine to P, disables preemption and returns poolLocal pool for the P.
 // Caller must call runtime_procUnpin() when done with the pool.
 func (p *Pool) pin() *poolLocal {
-	pid := runtime_procPin()
+	pid := runtime_procPin() //返回当前的P.id
 	// In pinSlow we store to localSize and then to local, here we load in opposite order.
 	// Since we've disabled preemption, GC cannot happen in between.
 	// Thus here we must observe local at least as large localSize.
@@ -158,11 +160,12 @@ func (p *Pool) pin() *poolLocal {
 	s := atomic.LoadUintptr(&p.localSize) // load-acquire
 	l := p.local                          // load-consume
 	if uintptr(pid) < s {
-		return indexLocal(l, pid)
+		return indexLocal(l, pid) //直接从数组中取 poolLocal
 	}
 	return p.pinSlow()
 }
 
+//重新分配 poolLocal数组
 func (p *Pool) pinSlow() *poolLocal {
 	// Retry under the mutex.
 	// Can not lock the mutex while pinned.
@@ -177,10 +180,10 @@ func (p *Pool) pinSlow() *poolLocal {
 		return indexLocal(l, pid)
 	}
 	if p.local == nil {
-		allPools = append(allPools, p)
+		allPools = append(allPools, p) //将p加入到allPools中，GC时会清理它之后分配的对象.
 	}
 	// If GOMAXPROCS changes between GCs, we re-allocate the array and lose the old one.
-	size := runtime.GOMAXPROCS(0)
+	size := runtime.GOMAXPROCS(0) //获取P的数量
 	local := make([]poolLocal, size)
 	atomic.StorePointer(&p.local, unsafe.Pointer(&local[0])) // store-release
 	atomic.StoreUintptr(&p.localSize, uintptr(size))         // store-release
@@ -204,15 +207,15 @@ func poolCleanup() {
 			}
 			l.shared = nil
 		}
-		p.local = nil
+		p.local = nil //置为空。它会导致下次Get()会重分配时，会再次加到allPools中.
 		p.localSize = 0
 	}
-	allPools = []*Pool{}
+	allPools = []*Pool{} //集合置为空
 }
 
 var (
 	allPoolsMu Mutex
-	allPools   []*Pool
+	allPools   []*Pool // 在GC时，需要遍历的Pool集合
 )
 
 func init() {
