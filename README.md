@@ -8,3 +8,4 @@ Some exploration and notes of golang source code.
 - sync/syncmap/syncmap.go
 - sync/pool.go
 - unsafe/unsafe.go
+- context/context.go
